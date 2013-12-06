@@ -1,0 +1,41 @@
+#!/bin/bash
+nome=1
+for i in $* ; do 
+    nome=$(($nome + 1))
+    if [[ ! "$i" = -* && "$i" != "$python_exe" ]] ; then
+        env_dir="$i"
+        i=""
+    elif [[ "$i" == "-p" ]] ; then
+        python_exe=$(eval "echo \$${nome}")
+    fi
+    params="$params $i"
+done
+
+test -z "$env_dir" && exit 1
+
+env_name=$(basename $env_dir)
+env_dir=$(dirname $env_dir)
+
+test "$env_name" != ".*" && env_name=".$env_name"
+
+venv=$(echo "$env_dir/$env_name" | sed 's/^ *//g')
+params=$(echo "$params" | sed 's/^ *//g')
+
+eval "virtualenv $venv $params"
+status=$?
+
+test ! $status -eq 0 && exit $status
+
+test ! -f "$env_dir/.venv" && echo "$env_name" > "$env_dir/.venv"
+
+test ! -f "$env_dir/.gitignore" && exit 0
+test ! $(grep -c "$env_name/" "$env_dir/.gitignore") -eq 0 && exit 0
+
+header="#Python Virtual Environments"
+if [ $(grep -c "$header" "$env_dir/.gitignore") -eq 0 ] ; then
+    echo -e "\n$header\n$env_name/\n" >> "$env_dir/.gitignore"
+else
+    sed -i "s/.*$header.*/&\n$env_name\//" .gitignore 
+fi
+
+

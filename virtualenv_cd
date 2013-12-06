@@ -1,0 +1,22 @@
+function virtualenv_cd() {
+    local target_dir=$(readlink -m "$1")
+    local working_dir="$target_dir"
+    local venv=""
+
+    while [ -n "$working_dir" ] ; do
+	if [ -f "$working_dir/.venv" ] ; then
+	    venv="$working_dir/`head "$working_dir/.venv" -n 1`"
+	    break
+	fi
+
+	working_dir=$(echo "$working_dir" | sed "s/\/[^\/]*$//")
+    done
+
+    if [ -n "$venv" ] && [ "$VIRTUAL_ENV" != "$venv" ] ; then
+        source "$venv/bin/activate"
+    elif [ -n "$VIRTUAL_ENV" ] ; then
+        deactivate
+    fi	    
+
+    builtin cd "$target_dir"
+}
