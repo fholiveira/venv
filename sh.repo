@@ -1,0 +1,15 @@
+###############################################################################
+#                                                                             #
+#                   sh.repos Script Configuration File                        #
+#                                                                             #
+#   home/       Home directory                                                #
+#   bin/        User directory in PATH                                        #
+#                                                                             #
+# --------------------------------------------------------------------------- #
+#                                                                             #
+#   Script                  Destination                         Executable    #
+#                                                                             #
+###############################################################################
+
+venv                        bin/venv                                1
+virtualenv_cd               bin/virtualenv_cd                       0
