@@ -8,12 +8,12 @@ function virtualenv_cd() {
 	    venv="$working_dir/`head "$working_dir/.venv" -n 1`"
 	    break
 	fi
-
+	
 	working_dir=$(echo "$working_dir" | sed "s/\/[^\/]*$//")
     done
 
-    if [ -n "$venv" ] && [ "$VIRTUAL_ENV" != "$venv" ] ; then
-        source "$venv/bin/activate"
+    if [ -n "$venv" ] ; then
+	test "$VIRTUAL_ENV" != "$venv" && source "$venv/bin/activate"
     elif [ -n "$VIRTUAL_ENV" ] ; then
         deactivate
     fi	    
