@@ -4,8 +4,8 @@ function virtualenv_cd() {
     local venv=""
 
     while [ -n "$working_dir" ] ; do
-	if [ -f "$working_dir/.venv" ] ; then
-	    venv="$working_dir/`head "$working_dir/.venv" -n 1`"
+	if [ -f "$working_dir/.env" ] ; then
+	    venv="$working_dir/$(grep ^PYVENV= $working_dir/.env | cut -d '=' -f 2)"
 	    break
 	fi
 	

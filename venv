@@ -1,41 +1,76 @@
-#!/bin/bash
-nome=1
-for i in $* ; do 
-    nome=$(($nome + 1))
-    if [[ ! "$i" = -* && "$i" != "$python_exe" ]] ; then
-        env_dir="$i"
-        i=""
-    elif [[ "$i" == "-p" ]] ; then
-        python_exe=$(eval "echo \$${nome}")
-    fi
-    params="$params $i"
-done
+#!/usr/bin/env python
 
-test -z "$env_dir" && exit 1
+"""Usage: virtualenv [options] <NAME>
 
-env_name=$(basename $env_dir)
-env_dir=$(dirname $env_dir)
+Creates a virtualenv called NAME in current directory.
 
-test "$env_name" != ".*" && env_name=".$env_name"
-
-venv=$(echo "$env_dir/$env_name" | sed 's/^ *//g')
-params=$(echo "$params" | sed 's/^ *//g')
-
-eval "virtualenv $venv $params"
-status=$?
-
-test ! $status -eq 0 && exit $status
-
-test ! -f "$env_dir/.venv" && echo "$env_name" > "$env_dir/.venv"
-
-test ! -f "$env_dir/.gitignore" && exit 0
-test ! $(grep -c "$env_name/" "$env_dir/.gitignore") -eq 0 && exit 0
-
-header="#Python Virtual Environments"
-if [ $(grep -c "$header" "$env_dir/.gitignore") -eq 0 ] ; then
-    echo -e "\n$header\n$env_name/\n" >> "$env_dir/.gitignore"
-else
-    sed -i "s/.*$header.*/&\n$env_name\//" .gitignore 
-fi
+Options:
+  -v, --version           show program's version number and exit
+  -h, --help              show this help message and exit
+  -v, --verbose           Increase verbosity.
+  -q, --quiet             Decrease verbosity.
+  -p PYTHON_EXE, --python=PYTHON_EXE
+                          The Python interpreter to use, e.g.,
+                          --python=python2.5 will use the python2.5 interpreter
+                          to create the new environment.  The default is the
+                          interpreter that virtualenv was installed with
+                          (/usr/bin/python3)
+  --clear                 Clear out the non-root install and start from scratch.
+  --system-site-packages  Give the virtual environment access to the global
+                          site-packages.
+  --always-copy           Always copy files rather than symlinking.
+  --unzip-setuptools      Unzip Setuptools when installing it.
+  --relocatable           Make an EXISTING virtualenv environment relocatable.
+                          This fixes up scripts and makes all .pth files
+                          relative.
+  --no-setuptools         Do not install setuptools (or pip) in the new
+                          virtualenv.
+  --no-pip                Do not install pip in the new virtualenv.
+  --extra-search-dir=DIR  Directory to look for setuptools/pip distributions in.
+                          This option can be used multiple times.
+  --prompt=PROMPT         Provides an alternative prompt prefix for this
+                          environment.
+"""
+from subprocess import Popen, PIPE
+from docopt import docopt
+from sys import stdout
+from os import path
 
 
+def bash(comando):
+    p = Popen(comando, shell=True, stderr=PIPE)
+    while True:
+        out = p.stderr.read(1)
+        if not out and p.poll() != None:
+            break
+        if out:
+            stdout.write(out)
+            stdout.flush()
+     
+
+def gerar_comando(argumentos):
+    name = argumentos.pop('<NAME>')
+    if not name.startswith('.'):
+        name = '.' + name
+
+    comando = "virtualenv " + name
+    for arg, valor in argumentos.items():
+        if isinstance(valor, bool):
+            comando = "{0} {1}".format(comando, arg)
+        else:
+            comando = "{0} {1}={2}".format(comando, arg, valor)
+    
+    print('Creating virtualenv in ./' + name + ' ...  ', end='')
+    bash(comando)
+    print("Done.")
+
+    if not path.isfile(name):
+        print('Creating environment configuration file ...  ', end='')
+        with open('.env', 'w') as arquivo:
+            arquivo.write("PYVENV={0}\n".format(name))
+        print('Done.')
+
+
+if __name__ == '__main__':
+    argumentos = {arg: valor for arg, valor in  docopt(__doc__, version=1.0).items() if valor}  
+    gerar_comando(argumentos)
